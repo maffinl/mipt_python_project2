@@ -1,0 +1,58 @@
+!pip install transformers
+
+import numpy as np
+import pandas as pd
+import torch
+import transformers as ppb # pytorch transformers
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import train_test_split
+
+data1 = pd.read_json('Sarcasm_Headlines_Dataset_v2.json', lines=True)
+data2 = pd.read_json('Sarcasm_Headlines_Dataset.json', lines=True)
+data1 = data1[['headline','is_sarcastic']]
+data2 = data2[['headline','is_sarcastic']]
+data = pd.concat([data1,data2])
+df = data.sample(frac=1)
+df.reset_index(drop=True, inplace=True)
+
+df.head()
+
+#model_class, tokenizer_class, pretrained_weights = (ppb.BertModel, ppb.BertTokenizer, 'bert-base-uncased')
+df.isnull().sum()
+df.info()
+
+batch_1 = df[:2000]
+#batch_1[1].value_counts()
+model_class, tokenizer_class, pretrained_weights = (ppb.DistilBertModel, ppb.DistilBertTokenizer, 'distilbert-base-uncased')
+tokenizer = tokenizer_class.from_pretrained(pretrained_weights)
+model = model_class.from_pretrained(pretrained_weights)
+
+#tokenized = batch_1[0].apply((lambda x: tokenizer.encode(x, add_special_tokens=True)))
+
+max_len = 0
+for i in tokenized.values:
+    if len(i) > max_len:
+        max_len = len(i)
+
+padded = np.array([i + [0]*(max_len-len(i)) for i in tokenized.values])
+
+np.array(padded).shape
+attention_mask = np.where(padded != 0, 1, 0)
+attention_mask.shape
+
+input_ids = torch.tensor(padded)  
+attention_mask = torch.tensor(attention_mask)
+
+with torch.no_grad():
+    last_hidden_states = model(input_ids, attention_mask=attention_mask)
+    
+features = last_hidden_states[0][:,0,:].numpy()
+labels = batch_1[1]
+train_features, test_features, train_labels, test_labels = train_test_split(features, labels)
+input_ids = torch.tensor(np.array(padded))
+
+with torch.no_grad():
+    last_hidden_states = model(input_ids)
+    
+features = last_hidden_states[0][:,0,:].numpy()
