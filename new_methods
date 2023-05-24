@@ -1,0 +1,30 @@
+neighbors = KNeighborsClassifier(n_neighbors=10)
+neighbors.fit(X_train, y_train)
+print(classification_report(y_val, neighbors.predict(X_val)))
+
+#Naive Bayes
+gnb = GaussianNB()
+y_pred = gnb.fit(X_train, y_train).predict(X_test)
+print('"Number of mislabeled points out of a total',(X_test.shape[0], (y_test != y_pred).sum()))
+print(classification_report(y_val, gnb.predict(X_val)))
+
+
+#Linear Model
+reg = linear_model.LinearRegression()
+reg.fit(X_train, y_train)
+print(classification_report(y_val, reg.predict(X_val)))
+
+
+#Class MLPClassifier
+clf = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(5, 2), random_state=1)
+clf.fit(X_train, y_train)
+print(classification_report(y_val, clf.predict(X_val)))
+
+#Stochastic Gradient Descent
+sgd = SGDClassifier(loss="log_loss", max_iter=5)
+sgd.fit(X_train, y_train)
+print(classification_report(y_val, sgd.predict(X_val))) 
+
+
+
+
